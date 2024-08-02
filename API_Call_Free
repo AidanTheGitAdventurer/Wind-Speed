@@ -1,0 +1,63 @@
+##### WIND SPEED #####
+import requests
+import json
+import pandas as pd
+import matplotlib.pyplot as plt
+
+pd.set_option('display.max_rows', None)  # Show all rows
+
+latitude = '55.478'
+longitude = '-34.882'
+
+wind_speed = requests.get("https://api.open-meteo.com/v1/forecast?latitude="+latitude+"&longitude="+longitude+"&current=temperature_2m,wind_speed_10m,wind_speed_80m,wind_speed_120m&hourly=wind_speed_10m,wind_speed_80m,wind_speed_120m&wind_speed_unit=mph")
+#print(wind_speed.content)
+
+# Step 2: Parse the JSON data into a Python dictionary
+data = wind_speed.json()
+
+# Step 3: Extract the 'current' data
+current_data = data['current']
+
+# Step 4: Create DataFrame from the 'current' data
+df_current = pd.DataFrame([current_data])
+
+# Display the DataFrame
+print('Current - Wind Speed at 10, 80 & 120  meters height.  Interval in Seconds:')
+display(df_current.T)
+
+# Step 5: Normalize the 'hourly' part of the JSON data
+hourly_data = data['hourly']
+
+# Step 6: Create DataFrame from the normalized 'hourly' data
+df_hourly = pd.DataFrame(hourly_data)
+
+# Display the DataFrame
+print('Forecast - Wind Speed at 10, 80 & 120 meters height:')
+#display(df_hourly)
+
+plt.figure(figsize=(14, 7))  # Set the figure size
+
+# Plot each variable
+plt.plot(hourly_data['time'], hourly_data['wind_speed_10m'], label='Wind Speed (10m)', marker='o')
+plt.plot(hourly_data['time'], hourly_data['wind_speed_80m'], label='Wind Speed (80m)', marker='o')
+plt.plot(hourly_data['time'], hourly_data['wind_speed_120m'], label='Wind Speed (120m)', marker='o')
+
+# Add labels and title
+plt.xlabel('Time')
+plt.ylabel('Wind Speed (Mph)')
+plt.title('Weather Forecast Next 7 Days')
+plt.legend()  # Show legend
+plt.grid(True, which='major', linestyle='-', linewidth=0.25)
+plt.ylim(bottom=0, top=50)
+plt.axhline(y=9, color='r', linestyle='--') #Adding a reference line for minimum wind speed at 9mph
+
+labels = plt.gca().get_xticklabels()
+# Show every 3rd label
+for i, label in enumerate(labels):
+    if i % 3 != 0:
+        label.set_visible(False)
+
+# Show the plot
+plt.xticks(rotation=90)  # Rotate x-axis labels for better readability
+plt.tight_layout()  # Adjust layout to fit labels
+plt.show()
